@@ -1,0 +1,312 @@
+@import "tailwindcss";
+
+/*
+ * HSC English Last Hour — Admin Dashboard design system.
+ * Premium, restrained, glass-tinged UI with accessible contrast.
+ * Tailwind v4: theme tokens live in @theme so they are available as utilities.
+ *
+ * Theming: the color tokens below are CSS variables, so they can be redefined
+ * under `:root[data-theme="light"]`. The `data-theme` attribute is set on <html>
+ * before first paint (see the inline script in app/layout.tsx) to avoid a flash
+ * of the wrong theme. Dark is the default when no attribute is present.
+ */
+
+@theme {
+  --color-ink: #e8ecf7;
+  --color-ink-soft: #aab3cc;
+  --color-ink-muted: #6f7a99;
+  --color-surface: #0b1020;
+  --color-surface-2: #111832;
+  --color-line: #232c4b;
+  --color-brand: #6d8cff;
+  --color-brand-strong: #4f6ef7;
+  --color-brand-soft: #93a9ff;
+  --color-accent: #22d3ee;
+  --color-positive: #34d399;
+  --color-warning: #fbbf24;
+  --color-danger: #f87171;
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --radius-xl2: 1.25rem;
+}
+
+/* -------------------------------- dark (default) ------------------------------- */
+:root {
+  --grad-primary: linear-gradient(135deg, #4f6ef7 0%, #6d8cff 45%, #22d3ee 120%);
+  --shadow-soft: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 18px 40px -24px rgba(0, 0, 0, 0.8);
+  --shadow-primary: 0 14px 34px -16px rgba(79, 110, 247, 0.65);
+  --glass-bg: rgba(20, 27, 52, 0.62);
+  --glass-border: rgba(150, 170, 255, 0.14);
+  --body-bg:
+    radial-gradient(1100px 620px at 12% -10%, rgba(79, 110, 247, 0.22), transparent 60%),
+    radial-gradient(900px 560px at 105% 0%, rgba(34, 211, 238, 0.14), transparent 55%),
+    radial-gradient(800px 600px at 50% 120%, rgba(124, 92, 255, 0.12), transparent 60%),
+    var(--color-surface);
+  --card-bg: linear-gradient(180deg, rgba(28, 36, 66, 0.72), rgba(15, 21, 42, 0.72));
+  --skeleton-bg: rgba(120, 140, 200, 0.12);
+  --skeleton-sheen: rgba(180, 200, 255, 0.16);
+  --scroll-thumb: rgba(109, 140, 255, 0.35);
+  color-scheme: dark;
+}
+
+/* --------------------------------- light -------------------------------------- */
+:root[data-theme="light"] {
+  --color-ink: #101828;
+  --color-ink-soft: #475467;
+  --color-ink-muted: #667085;
+  --color-surface: #f3f5fb;
+  --color-surface-2: #ffffff;
+  --color-line: #d7dceb;
+  --color-brand: #4f6ef7;
+  --color-brand-strong: #3b57e0;
+  --color-brand-soft: #4f5fd6;
+  --color-accent: #0e7490;
+  --color-positive: #047857;
+  --color-warning: #b45309;
+  --color-danger: #dc2626;
+  --grad-primary: linear-gradient(135deg, #3b57e0 0%, #4f6ef7 45%, #0e7490 120%);
+  --shadow-soft: 0 1px 0 rgba(255, 255, 255, 0.7) inset, 0 18px 40px -28px rgba(16, 24, 40, 0.35);
+  --shadow-primary: 0 14px 30px -16px rgba(59, 87, 224, 0.5);
+  --glass-bg: rgba(255, 255, 255, 0.74);
+  --glass-border: rgba(16, 24, 40, 0.08);
+  --body-bg:
+    radial-gradient(1100px 620px at 12% -10%, rgba(79, 110, 247, 0.14), transparent 60%),
+    radial-gradient(900px 560px at 105% 0%, rgba(14, 116, 144, 0.1), transparent 55%),
+    radial-gradient(800px 600px at 50% 120%, rgba(124, 92, 255, 0.1), transparent 60%),
+    var(--color-surface);
+  --card-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(243, 245, 251, 0.94));
+  --skeleton-bg: rgba(16, 24, 40, 0.06);
+  --skeleton-sheen: rgba(79, 110, 247, 0.12);
+  --scroll-thumb: rgba(79, 110, 247, 0.35);
+  color-scheme: light;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  background: var(--body-bg);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  border-color: var(--color-line);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-brand-soft);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+::selection {
+  background: rgba(109, 140, 255, 0.35);
+}
+
+/* Glass surfaces */
+.glass {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+}
+
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl2);
+  box-shadow: var(--shadow-soft);
+}
+
+.brand-text {
+  background: var(--grad-primary);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Scrollbars */
+.scroll-thin {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scroll-thumb) transparent;
+}
+.scroll-thin::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.scroll-thin::-webkit-scrollbar-thumb {
+  background: var(--scroll-thumb);
+  border-radius: 999px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: var(--skeleton-bg);
+}
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, var(--skeleton-sheen), transparent);
+  animation: shimmer 1.4s infinite;
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.28s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/*
+ * Light theme: the UI uses translucent-white overlays (`bg-white/8`, etc.) as
+ * subtle elevation on dark surfaces. On a light background those would be
+ * invisible, so remap them to translucent-ink below. These rules are unlayered
+ * (outside @layer utilities), so they win over Tailwind's generated utilities.
+ * Solid `text-white` (brand buttons, badges) is unaffected and stays white.
+ */
+:root[data-theme="light"] .bg-white\/4 {
+  background-color: rgba(16, 24, 40, 0.03);
+}
+:root[data-theme="light"] .bg-white\/5 {
+  background-color: rgba(16, 24, 40, 0.04);
+}
+:root[data-theme="light"] .bg-white\/6 {
+  background-color: rgba(16, 24, 40, 0.05);
+}
+:root[data-theme="light"] .bg-white\/8 {
+  background-color: rgba(16, 24, 40, 0.06);
+}
+:root[data-theme="light"] .bg-white\/10 {
+  background-color: rgba(16, 24, 40, 0.08);
+}
+:root[data-theme="light"] .bg-white\/30 {
+  background-color: rgba(16, 24, 40, 0.18);
+}
+:root[data-theme="light"] .hover\:bg-white\/4:hover {
+  background-color: rgba(16, 24, 40, 0.03);
+}
+:root[data-theme="light"] .hover\:bg-white\/5:hover {
+  background-color: rgba(16, 24, 40, 0.04);
+}
+:root[data-theme="light"] .hover\:bg-white\/8:hover {
+  background-color: rgba(16, 24, 40, 0.06);
+}
+:root[data-theme="light"] .hover\:bg-white\/10:hover {
+  background-color: rgba(16, 24, 40, 0.08);
+}
+:root[data-theme="light"] .border-white\/8 {
+  border-color: rgba(16, 24, 40, 0.1);
+}
+:root[data-theme="light"] .border-white\/10 {
+  border-color: rgba(16, 24, 40, 0.14);
+}
+:root[data-theme="light"] .border-white\/30 {
+  border-color: rgba(16, 24, 40, 0.2);
+}
+:root[data-theme="light"] .divide-white\/6 > :not(:last-child) {
+  border-color: rgba(16, 24, 40, 0.08);
+}
+
+/*
+ * Status/alert tone text is authored for dark surfaces (light 200/300 shades).
+ * On light surfaces those wash out, so remap them to darker shades.
+ */
+:root[data-theme="light"] .text-amber-200 {
+  color: #92400e;
+}
+:root[data-theme="light"] .text-amber-300 {
+  color: #b45309;
+}
+:root[data-theme="light"] .text-sky-200 {
+  color: #075985;
+}
+:root[data-theme="light"] .text-sky-300 {
+  color: #0369a1;
+}
+:root[data-theme="light"] .text-emerald-200 {
+  color: #065f46;
+}
+:root[data-theme="light"] .text-emerald-300 {
+  color: #047857;
+}
+:root[data-theme="light"] .text-rose-200 {
+  color: #9f1239;
+}
+:root[data-theme="light"] .text-rose-300 {
+  color: #be123c;
+}
+:root[data-theme="light"] .text-indigo-300 {
+  color: #4338ca;
+}
+:root[data-theme="light"] .text-violet-300 {
+  color: #6d28d9;
+}
+:root[data-theme="light"] .text-slate-300 {
+  color: #334155;
+}
+
+/* Theme-aware spinner ring: derives from the current text colour. */
+.spinner-ring {
+  border-color: color-mix(in oklab, currentColor 30%, transparent);
+  border-top-color: currentColor;
+}
+
+/* Invoice printing: force a clean, light sheet regardless of the active theme. */
+@media print {
+  :root,
+  :root[data-theme="light"] {
+    --color-ink: #0f172a;
+    --color-ink-soft: #334155;
+    --color-ink-muted: #475569;
+  }
+  body {
+    background: #ffffff !important;
+    color: #0f172a !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-sheet {
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+    background: #ffffff !important;
+  }
+  @page {
+    margin: 16mm;
+  }
+}
