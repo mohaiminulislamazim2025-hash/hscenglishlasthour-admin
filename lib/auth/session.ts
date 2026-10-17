@@ -1,17 +1,32 @@
 import "server-only";
 
 import type { User } from "@supabase/supabase-js";
-import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 /**
- * Authentication primitives. Authentication = who the user is (Supabase Auth).
- * Authorization = whether that user is an admin (`admin_users` allow-list),
- * checked server-side with the privileged client because `admin_users` has no
- * PostgREST access for the `authenticated` role.
+ * Authentication primitives. Authorization = whether the signed-in Supabase Auth
+ * user is an admin. Primary source is `app_metadata.role === "admin"`, with an
+ * optional server-only allow-list via `ADMIN_EMAILS` (comma-separated) as a
+ * safe fallback for first-run setup. No dependency on a secret key for the core
+ * authorization check.
  */
 
-const ADMIN_USERS_TABLE = "admin_users";
+function readServerEnv(...names: string[]): string | null {
+  for (const name of names) {
+    const value = process.env[name];
+    if (typeof value === "string" && value.trim().length > 0) return value.trim();
+  }
+  return null;
+}
+
+function allowedAdminEmails(): string[] {
+  const raw = readServerEnv("ADMIN_EMAILS");
+  if (!raw) return [];
+  return raw
+    .split(",")
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean);
+}
 
 /** The signed-in Supabase Auth user, or null. Never throws. */
 export async function getAuthUser(): Promise<User | null> {
@@ -26,80 +41,35 @@ export async function getAuthUser(): Promise<User | null> {
   }
 }
 
-/** True when the given auth user id is present in the `admin_users` allow-list. */
-export async function isAdminUserId(userId: string | null | undefined): Promise<boolean> {
-  if (!userId) return false;
-  try {
-    const { data, error } = await getSupabaseAdminClient()
-      .from(ADMIN_USERS_TABLE)
-      .select("user_id")
-      .eq("user_id", userId)
-      .maybeSingle();
-    if (error) return false;
-    return Boolean(data);
-  } catch {
-    return false;
+/** True if the user has admin privileges. */
+export function hasAdminRole(user: User | null): boolean {
+  if (!user) return false;
+  const role = (user.app_metadata as Record<string, unknown> | undefined)?.role;
+  if (typeof role === "string" && role.toLowerCase() === "admin") return true;
+  const allow = allowedAdminEmails();
+  if (allow.length > 0 && user.email) {
+    if (allow.includes(user.email.toLowerCase())) return true;
   }
+  return false;
 }
 
-export interface AdminAccount {
-  userId: string;
+export interface AdminAccountSummary {
   email: string | null;
-  createdAt: string;
+  userId: string;
 }
 
-/**
- * List admin accounts with their emails (email comes from Supabase Auth). Only
- * callable from server code after an admin check. Read-only: the dashboard never
- * grants or revokes admin membership without explicit owner approval.
- */
-export async function listAdminAccounts(): Promise<AdminAccount[]> {
-  try {
-    const admin = getSupabaseAdminClient();
-    const { data: rows, error } = await admin
-      .from(ADMIN_USERS_TABLE)
-      .select("user_id, created_at")
-      .order("created_at", { ascending: true });
-    if (error || !rows) return [];
-
-    const ids = new Set(rows.map((row) => row.user_id));
-    const emailById = new Map<string, string | null>();
-
-    // Look up emails for the (normally tiny) admin allow-list.
-    let page = 1;
-    const perPage = 200;
-    while (page <= 25) {
-      const { data: usersPage, error: usersError } = await admin.auth.admin.listUsers({
-        page,
-        perPage,
-      });
-      if (usersError || !usersPage) break;
-      for (const user of usersPage.users) {
-        if (ids.has(user.id)) emailById.set(user.id, user.email ?? null);
-      }
-      if (usersPage.users.length < perPage) break;
-      page += 1;
-    }
-
-    return rows.map((row) => ({
-      userId: row.user_id,
-      email: emailById.get(row.user_id) ?? null,
-      createdAt: row.created_at,
-    }));
-  } catch {
-    return [];
-  }
+export interface AdminAuthConfig {
+  roleConfigured: boolean;
+  allowListCount: number;
+  hasAllowList: boolean;
 }
 
-/** Number of rows in the admin allow-list (used for first-run setup guidance). */
-export async function countAdmins(): Promise<number> {
-  try {
-    const { count, error } = await getSupabaseAdminClient()
-      .from(ADMIN_USERS_TABLE)
-      .select("user_id", { count: "exact", head: true });
-    if (error) return 0;
-    return count ?? 0;
-  } catch {
-    return 0;
-  }
+/** Describes admin authorization configuration (no privileged DB calls). */
+export function describeAdminConfig(): AdminAuthConfig {
+  const allow = allowedAdminEmails();
+  return {
+    roleConfigured: false, // we don't inspect metadata across users here
+    allowListCount: allow.length,
+    hasAllowList: allow.length > 0,
+  };
 }

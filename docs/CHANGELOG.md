@@ -1,5 +1,37 @@
 # Changelog
 
+## 0.2.0 — Nuri Shirt Store rebrand
+
+### Changed
+
+- Rebranded the dashboard from the **HSC English Last Hour** book admin to the
+  **Nuri Shirt Store** product/order admin.
+- **Schema**: switched from `books`/`book_pages` to
+  `products`/`orders`/`order_items`/`store_settings` with `*_bdt` money columns.
+  `types/database.ts` and `types/admin.ts` were rewritten to match.
+- **Auth/authorization**: removed the `admin_users` table dependency. Admin
+  access is now `app_metadata.role === "admin"`, with an optional server-only
+  `ADMIN_EMAILS` allow-list (`lib/auth/session.ts`).
+- **Products**: new list/create/edit/delete screens and `ProductForm`
+  (`lib/products/*`, `app/(dashboard)/products/*`).
+- **Product images**: replaced the book cover/PDF/page-image pipeline with a
+  single product-image upload flow (`products/{productId}/image.{ext}`) via
+  signed upload URLs (`ProductImageUploader`, `lib/upload/client.ts`).
+- **Orders**: updated to the new columns and item lines; detail and invoice show
+  `order_items`.
+- **Customers**: now grouped by mobile number.
+- **Settings**: added an editable delivery-charge form.
+- **Uploads**: image-only (webp/jpeg/png/avif, ≤ 5 MB); removed PDF handling.
+- Bucket accessor renamed to `getSupabaseProductBucket()` (default
+  `nuri-product-images`); env var name `SUPABASE_BOOK_BUCKET` retained for
+  compatibility.
+- Docs rewritten for Nuri; `NURI_PROJECT_MEMORY.md` added.
+
+### Removed
+
+- `lib/books/*`, `lib/validation/book.ts`, `components/books/*`, the `/books`
+  and `/content` routes, and the book-era unit test.
+
 ## 0.1.1 — Bug fixes & theming
 
 ### Fixed

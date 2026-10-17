@@ -17,7 +17,7 @@ export default async function CustomersPage() {
     <div>
       <PageHeader
         title="Customers"
-        description="Derived from orders, grouped by phone number. The website collects name, phone and address only."
+        description="Derived from orders, grouped by mobile number. The website collects name, mobile and address only."
       />
 
       {customers.length === 0 ? (
@@ -41,10 +41,10 @@ export default async function CustomersPage() {
               </thead>
               <tbody className="divide-y divide-white/6">
                 {customers.map((customer) => (
-                  <tr key={customer.phone} className="align-top transition hover:bg-white/4">
+                  <tr key={customer.mobile} className="align-top transition hover:bg-white/4">
                     <td className="px-5 py-3">
                       <p className="font-medium text-[var(--color-ink)]">{customer.name}</p>
-                      <p className="text-xs text-[var(--color-ink-muted)]">{customer.phone}</p>
+                      <p className="text-xs text-[var(--color-ink-muted)]">{customer.mobile}</p>
                       {customer.addresses.length > 0 ? (
                         <p className="mt-1 line-clamp-1 text-xs text-[var(--color-ink-muted)]">
                           {customer.addresses[0]}
@@ -54,7 +54,7 @@ export default async function CustomersPage() {
                     </td>
                     <td className="px-3 py-3 tabular-nums">
                       <Link
-                        href={`/orders?q=${encodeURIComponent(customer.phone)}`}
+                        href={`/orders?q=${encodeURIComponent(customer.mobile)}`}
                         className="text-[var(--color-brand-soft)] hover:underline"
                       >
                         {customer.orderCount}

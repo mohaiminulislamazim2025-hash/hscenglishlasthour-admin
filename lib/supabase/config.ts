@@ -58,9 +58,15 @@ export function getSupabaseSecretKey(): string | null {
   return readServerEnv("SUPABASE_SECRET_KEY", "SUPABASE_SERVICE_ROLE_KEY");
 }
 
-/** Storage bucket for book assets. */
-export function getSupabaseBookBucket(): string {
-  return readServerEnv("SUPABASE_BOOK_BUCKET") ?? "book-assets";
+/**
+ * Storage bucket for product images.
+ *
+ * The env var name stays `SUPABASE_BOOK_BUCKET` for compatibility with the
+ * existing `.env.local`, but its value points at the Nuri store bucket
+ * (`nuri-product-images`). Falls back to `nuri-product-images`.
+ */
+export function getSupabaseProductBucket(): string {
+  return readServerEnv("SUPABASE_BOOK_BUCKET") ?? "nuri-product-images";
 }
 
 /** True when public (browser) Supabase access is configured. */

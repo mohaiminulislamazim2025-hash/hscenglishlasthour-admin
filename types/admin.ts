@@ -1,8 +1,9 @@
 import type { Tables } from "@/types/database";
 
-export type BookRow = Tables<"books">;
-export type BookPageRow = Tables<"book_pages">;
+export type ProductRow = Tables<"products">;
 export type OrderRow = Tables<"orders">;
+export type OrderItemRow = Tables<"order_items">;
+export type StoreSettingsRow = Tables<"store_settings">;
 
 export const ORDER_STATUSES = [
   "pending",
@@ -56,69 +57,54 @@ export function canTransition(from: OrderStatus, to: OrderStatus): boolean {
   return ORDER_STATUS_TRANSITIONS[from]?.includes(to) ?? false;
 }
 
-export const CONTENT_MODES = ["page-images", "pdf"] as const;
-export type ContentMode = (typeof CONTENT_MODES)[number];
-
-export const READING_MODES = ["flip", "pdf"] as const;
-export type ReadingMode = (typeof READING_MODES)[number];
-
-export interface BookSummary {
+/** A catalog product as shown/edited in the dashboard. */
+export interface ProductSummary {
   id: string;
-  title: string;
-  author: string | null;
+  name: string;
   description: string | null;
-  coverImagePath: string | null;
-  contentMode: string;
-  pdfStoragePath: string | null;
-  isPublished: boolean;
-  price: number;
-  offerPrice: number | null;
-  deliveryCharge: number;
-  currency: string;
-  previewPageCount: number;
-  defaultMode: string;
-  pageAspectRatio: number;
-  flipEnabled: boolean;
-  pdfEnabled: boolean;
-  minZoom: number;
-  maxZoom: number;
-  marketCountry: string;
-  phoneRegion: string;
+  priceBdt: number;
+  imagePath: string | null;
+  isAvailable: boolean;
+  stockQuantity: number;
+  sortOrder: number;
   createdAt: string;
   updatedAt: string;
-  pageCount?: number;
 }
 
-export interface PageRecord {
+/** A single line item within an order. */
+export interface OrderItem {
   id: string;
-  bookId: string;
-  storagePath: string;
-  pageNumber: number;
-  isAvailable: boolean;
-  alt: string | null;
+  orderId: string;
+  productId: string | null;
+  productName: string;
+  quantity: number;
+  unitPriceBdt: number;
+  lineTotalBdt: number;
   createdAt: string;
-  updatedAt: string;
 }
 
 export interface OrderListItem {
   id: string;
-  bookId: string;
-  bookTitle: string;
   customerName: string;
-  customerPhone: string;
+  customerMobile: string;
   customerAddress: string;
-  bookPrice: number;
-  deliveryCharge: number;
-  totalAmount: number;
-  currency: string;
   paymentMethod: string;
   status: OrderStatus;
+  subtotalBdt: number;
+  deliveryChargeBdt: number;
+  totalBdt: number;
+  currency: string;
   createdAt: string;
   updatedAt: string;
+  itemCount: number;
+}
+
+export interface OrderDetail extends OrderListItem {
+  items: OrderItem[];
 }
 
 export interface CustomerSummary {
-  phone: string;
+  mobile: string;
   name: string;
   addresses: string[];
   orderCount: number;
@@ -127,14 +113,19 @@ export interface CustomerSummary {
   statuses: Partial<Record<OrderStatus, number>>;
 }
 
+export interface StoreSettings {
+  deliveryChargeBdt: number;
+  currency: string;
+}
+
 export interface OverviewStats {
-  totalBooks: number;
-  publishedBooks: number;
-  draftBooks: number;
+  totalProducts: number;
+  availableProducts: number;
+  unavailableProducts: number;
   totalOrders: number;
   ordersByStatus: Record<OrderStatus, number>;
   revenue: number;
   currency: string;
   recentOrders: OrderListItem[];
-  recentlyUpdatedBooks: BookSummary[];
+  recentlyUpdatedProducts: ProductSummary[];
 }

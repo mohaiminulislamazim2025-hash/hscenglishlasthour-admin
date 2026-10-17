@@ -2,7 +2,6 @@
 
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { publicConfigDiagnostic } from "@/lib/supabase/config";
-import type { UploadKind } from "@/lib/validation/upload";
 
 export interface SignResponse {
   path: string;
@@ -11,20 +10,22 @@ export interface SignResponse {
 }
 
 export interface SignedUploadRequest {
-  bookId: string;
-  kind: UploadKind;
+  productId: string;
   filename: string;
   contentType: string;
   size: number;
-  pageNumber?: number;
 }
 
-/** Ask the server to mint a short-lived signed upload URL for a book asset. */
 export async function requestSignedUpload(input: SignedUploadRequest): Promise<SignResponse> {
   const response = await fetch("/api/admin/uploads/sign", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(input),
+    body: JSON.stringify({
+      productId: input.productId,
+      filename: input.filename,
+      contentType: input.contentType,
+      size: input.size,
+    }),
   });
   const data = (await response.json().catch(() => null)) as (SignResponse & { error?: string }) | null;
   if (!response.ok || !data?.path || !data.token) {
@@ -33,7 +34,6 @@ export async function requestSignedUpload(input: SignedUploadRequest): Promise<S
   return { path: data.path, token: data.token, bucket: data.bucket };
 }
 
-/** Upload a file directly to private Storage using the signed token. */
 export async function uploadFileToStorage(sign: SignResponse, file: File): Promise<void> {
   const supabase = getSupabaseBrowserClient();
   if (!supabase) throw new Error(publicConfigDiagnostic());
@@ -44,11 +44,4 @@ export async function uploadFileToStorage(sign: SignResponse, file: File): Promi
       upsert: true,
     });
   if (error) throw new Error(error.message);
-}
-
-/** Extract a lowercase extension, or empty string. */
-export function fileExtension(name: string): string {
-  const dot = name.lastIndexOf(".");
-  if (dot <= 0 || dot === name.length - 1) return "";
-  return name.slice(dot + 1).toLowerCase();
 }

@@ -5,7 +5,7 @@ import { StatCard } from "@/components/ui/StatCard";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/feedback";
 import { LinkButton } from "@/components/ui/Button";
-import { IconBook, IconEye, IconImage, IconOrders, IconPlus } from "@/components/ui/icons";
+import { IconShirt, IconImage, IconOrders, IconPlus } from "@/components/ui/icons";
 import { getOverviewStats } from "@/lib/dashboard/stats";
 import { formatMoney } from "@/lib/format";
 import { ORDER_STATUSES, ORDER_STATUS_LABELS } from "@/types/admin";
@@ -22,21 +22,21 @@ export default async function OverviewPage() {
     <div>
       <PageHeader
         title="Overview"
-        description="Live figures from the Supabase backend shared with the public website."
+        description="Live figures from the Supabase backend shared with the storefront."
         action={
-          <LinkButton href="/books/new" size="md">
+          <LinkButton href="/products/new" size="md">
             <IconPlus width={16} height={16} />
-            Add book
+            Add product
           </LinkButton>
         }
       />
 
       <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard
-          label="Total books"
-          value={stats.totalBooks}
-          hint={`${stats.publishedBooks} published · ${stats.draftBooks} draft`}
-          icon={<IconBook />}
+          label="Total products"
+          value={stats.totalProducts}
+          hint={`${stats.availableProducts} available · ${stats.unavailableProducts} unavailable`}
+          icon={<IconShirt />}
         />
         <StatCard
           label="Total orders"
@@ -53,11 +53,11 @@ export default async function OverviewPage() {
           icon={<IconImage />}
         />
         <StatCard
-          label="Published"
-          value={stats.publishedBooks}
+          label="Available"
+          value={stats.availableProducts}
           hint="Visible to website visitors"
           tone="neutral"
-          icon={<IconEye />}
+          icon={<IconImage />}
         />
       </section>
 
@@ -86,7 +86,7 @@ export default async function OverviewPage() {
           <div className="p-5 pb-0">
             <CardHeader
               title="Recent orders"
-              description="Latest 6 orders across all books."
+              description="Latest 6 orders across all products."
               action={
                 <Link href="/orders" className="text-xs font-medium text-[var(--color-brand-soft)] hover:underline">
                   View all
@@ -115,12 +115,12 @@ export default async function OverviewPage() {
                         {order.customerName}
                       </p>
                       <p className="truncate text-xs text-[var(--color-ink-muted)]">
-                        {order.bookTitle} · {order.customerPhone}
+                        {order.customerMobile} · {order.itemCount} item{order.itemCount === 1 ? "" : "s"}
                       </p>
                     </div>
                     <div className="shrink-0 text-right">
                       <p className="text-sm font-semibold tabular-nums text-[var(--color-ink)]">
-                        {formatMoney(order.totalAmount, order.currency)}
+                        {formatMoney(order.totalBdt, order.currency)}
                       </p>
                       <Badge tone={order.status} className="mt-1">
                         {titleCase(order.status)}
@@ -136,49 +136,47 @@ export default async function OverviewPage() {
         <Card className="p-0">
           <div className="p-5 pb-0">
             <CardHeader
-              title="Recently updated books"
+              title="Recently updated products"
               description="Most recently edited catalog entries."
               action={
-                <Link href="/books" className="text-xs font-medium text-[var(--color-brand-soft)] hover:underline">
+                <Link href="/products" className="text-xs font-medium text-[var(--color-brand-soft)] hover:underline">
                   Manage
                 </Link>
               }
             />
           </div>
-          {stats.recentlyUpdatedBooks.length === 0 ? (
+          {stats.recentlyUpdatedProducts.length === 0 ? (
             <div className="p-5 pt-0">
               <EmptyState
-                title="No books yet"
-                description="Create your first book to start managing content."
-                icon={<IconBook />}
+                title="No products yet"
+                description="Create your first product to start managing your store."
+                icon={<IconShirt />}
                 action={
-                  <LinkButton href="/books/new" size="sm">
+                  <LinkButton href="/products/new" size="sm">
                     <IconPlus width={14} height={14} />
-                    Add book
+                    Add product
                   </LinkButton>
                 }
               />
             </div>
           ) : (
             <ul className="divide-y divide-white/6">
-              {stats.recentlyUpdatedBooks.map((book) => (
-                <li key={book.id}>
+              {stats.recentlyUpdatedProducts.map((product) => (
+                <li key={product.id}>
                   <Link
-                    href={`/books/${book.id}`}
+                    href={`/products/${product.id}`}
                     className="flex items-center justify-between gap-3 px-5 py-3 transition hover:bg-white/4"
                   >
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-[var(--color-ink)]">{book.title}</p>
-                      <p className="truncate text-xs text-[var(--color-ink-muted)]">
-                        {book.id} · {book.pageCount ?? 0} pages
-                      </p>
+                      <p className="truncate text-sm font-medium text-[var(--color-ink)]">{product.name}</p>
+                      <p className="truncate text-xs text-[var(--color-ink-muted)]">{product.id}</p>
                     </div>
                     <div className="shrink-0 text-right">
                       <p className="text-sm font-semibold tabular-nums text-[var(--color-ink)]">
-                        {formatMoney(book.offerPrice ?? book.price, book.currency)}
+                        {formatMoney(product.priceBdt, "BDT")}
                       </p>
-                      <span className={`text-xs ${statusTone(book.isPublished ? "published" : "draft")}`}>
-                        {book.isPublished ? "Published" : "Draft"}
+                      <span className={`text-xs ${statusTone(product.isAvailable ? "published" : "draft")}`}>
+                        {product.isAvailable ? "Available" : "Unavailable"}
                       </span>
                     </div>
                   </Link>

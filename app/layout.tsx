@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Admin — HSC English Last Hour",
-  description: "Admin dashboard for HSC English Last Hour.",
+  title: "Nuri Shirt Store — Admin",
+  description: "Admin dashboard for Nuri Shirt Store.",
   robots: { index: false, follow: false },
 };
 

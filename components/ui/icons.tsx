@@ -32,6 +32,12 @@ export const IconBook = (p: IconProps) => (
   </svg>
 );
 
+export const IconShirt = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M6 4h4l2 2 2-2h4v3h2l-2 7v6H6v-6L4 7h2V4z" />
+  </svg>
+);
+
 export const IconPlus = (p: IconProps) => (
   <svg {...base(p)}>
     <path d="M12 5v14M5 12h14" />
@@ -224,3 +230,8 @@ export const IconMonitor = (p: IconProps) => (
 );
 
 export const IconStaff = IconShield;
+export const IconTag = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M13 2l7 7-9 9-7-7V4h6z" />
+  </svg>
+);

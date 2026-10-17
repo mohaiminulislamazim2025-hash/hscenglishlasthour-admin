@@ -6,14 +6,13 @@ import { useState, type ReactNode } from "react";
 import { cn } from "@/components/ui/utils";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import {
-  IconBook,
   IconDashboard,
-  IconImage,
   IconLogout,
   IconMenu,
   IconOrders,
   IconPlus,
   IconSettings,
+  IconShirt,
   IconUser,
   IconUsers,
   IconX,
@@ -21,9 +20,8 @@ import {
 
 const NAV = [
   { href: "/", label: "Overview", icon: IconDashboard, exact: true },
-  { href: "/books", label: "Books", icon: IconBook },
-  { href: "/books/new", label: "Add Book", icon: IconPlus },
-  { href: "/content", label: "Content / PDF & Images", icon: IconImage },
+  { href: "/products", label: "Products", icon: IconShirt },
+  { href: "/products/new", label: "Add Product", icon: IconPlus },
   { href: "/orders", label: "Orders", icon: IconOrders },
   { href: "/customers", label: "Customers", icon: IconUsers },
   { href: "/settings", label: "Settings", icon: IconSettings },
@@ -32,7 +30,7 @@ const NAV = [
 
 function isActive(pathname: string, href: string, exact?: boolean): boolean {
   if (exact) return pathname === href;
-  if (href === "/books") return pathname === "/books" || /^\/books\/(?!new)/.test(pathname);
+  if (href === "/products") return pathname === "/products" || /^\/products\/(?!new)/.test(pathname);
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
@@ -81,15 +79,15 @@ export function AppShell({
         <div>
           <Link href="/" className="mb-6 flex items-center gap-2.5 px-1">
             <span
-              className="flex h-9 w-9 items-center justify-center rounded-xl text-white"
-              style={{ backgroundImage: "var(--grad-primary)" }}
+              className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white/8"
               aria-hidden="true"
             >
-              <IconBook width={18} height={18} />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logonuri.jpg" alt="" className="h-full w-full object-cover" />
             </span>
             <span className="min-w-0">
-              <span className="brand-text block truncate text-sm font-bold">HSC English</span>
-              <span className="block text-[11px] text-[var(--color-ink-muted)]">Last Hour · Admin</span>
+              <span className="brand-text block truncate text-sm font-bold">Nuri</span>
+              <span className="block text-[11px] text-[var(--color-ink-muted)]">Shirt Store · Admin</span>
             </span>
           </Link>
           {nav}
@@ -140,7 +138,7 @@ export function AppShell({
             <p className="truncate text-sm font-medium text-[var(--color-ink)]">{email ?? "admin"}</p>
           </div>
           <div className="flex items-center gap-2 lg:hidden">
-            <span className="brand-text text-sm font-bold">HSC English Last Hour</span>
+            <span className="brand-text text-sm font-bold">Nuri Shirt Store</span>
           </div>
           <div className="flex items-center gap-2">
             <ThemeToggle />

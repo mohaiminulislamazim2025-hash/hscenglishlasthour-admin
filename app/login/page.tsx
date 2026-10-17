@@ -1,18 +1,18 @@
 import type { Metadata } from "next";
 import { LoginForm } from "@/components/auth/LoginForm";
-import { countAdmins } from "@/lib/auth/session";
+import { describeAdminConfig } from "@/lib/auth/session";
 import { isSupabaseAdminConfigured, isSupabasePublicConfigured } from "@/lib/supabase/config";
 import { Alert } from "@/components/ui/feedback";
-import { IconBook, IconShield } from "@/components/ui/icons";
+import { IconShield } from "@/components/ui/icons";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 
-export const metadata: Metadata = { title: "Sign in — HSC English Last Hour Admin" };
+export const metadata: Metadata = { title: "Sign in — Nuri Shirt Store Admin" };
 
 export const dynamic = "force-dynamic";
 
 export default async function LoginPage() {
   const configured = isSupabasePublicConfigured() && isSupabaseAdminConfigured();
-  const adminCount = configured ? await countAdmins() : 0;
+  const adminConfig = describeAdminConfig();
 
   return (
     <main className="flex min-h-dvh items-center justify-center px-4 py-10">
@@ -20,14 +20,14 @@ export default async function LoginPage() {
         <div className="mb-6 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <span
-              className="flex h-11 w-11 items-center justify-center rounded-2xl text-white"
-              style={{ backgroundImage: "var(--grad-primary)", boxShadow: "var(--shadow-primary)" }}
+              className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl bg-white/8"
               aria-hidden="true"
             >
-              <IconBook width={20} height={20} />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logonuri.jpg" alt="" className="h-full w-full object-cover" />
             </span>
             <div>
-              <p className="brand-text text-lg font-bold">HSC English Last Hour</p>
+              <p className="brand-text text-lg font-bold">Nuri Shirt Store</p>
               <p className="text-xs text-[var(--color-ink-muted)]">Admin dashboard</p>
             </div>
           </div>
@@ -48,20 +48,19 @@ export default async function LoginPage() {
             </Alert>
           ) : null}
 
-          {configured && adminCount === 0 ? (
+          {configured && !adminConfig.hasAllowList ? (
             <Alert tone="info" className="mb-4">
-              <strong>First-run setup:</strong> no administrator account exists yet. Create a user in
-              Supabase Auth (Authentication → Users), then add that user&apos;s ID to the{" "}
-              <code>admin_users</code> table. Sign in afterwards. See{" "}
-              <code>docs/SECURITY.md</code>.
+              <strong>Admin access:</strong> grant a user admin by setting{" "}
+              <code>app_metadata.role = &quot;admin&quot;</code> in Supabase Auth, or list their email
+              in <code>ADMIN_EMAILS</code>.
             </Alert>
           ) : null}
 
           <LoginForm />
 
           <p className="mt-5 text-center text-xs text-[var(--color-ink-muted)]">
-            Access is restricted to members of the <code>admin_users</code> allow-list. New
-            accounts cannot self-register as administrators.
+            Access is restricted to authorized administrators. New accounts cannot self-register as
+            administrators.
           </p>
         </div>
       </div>

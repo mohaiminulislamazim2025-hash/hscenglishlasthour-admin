@@ -12,10 +12,10 @@ const mockedAggregates = vi.mocked(listOrderAggregates);
 function row(overrides: Partial<OrderAggregateRow>): OrderAggregateRow {
   return {
     status: "pending",
-    totalAmount: 410,
+    totalBdt: 410,
     createdAt: "2026-01-01T10:00:00.000Z",
     customerName: "Karim",
-    customerPhone: "01700000000",
+    customerMobile: "01700000000",
     customerAddress: "Dhaka",
     ...overrides,
   };
@@ -26,17 +26,17 @@ describe("listCustomers", () => {
     mockedAggregates.mockReset();
   });
 
-  it("groups orders by phone number", async () => {
+  it("groups orders by mobile number", async () => {
     mockedAggregates.mockResolvedValue([
       row({ createdAt: "2026-01-01T10:00:00.000Z" }),
-      row({ createdAt: "2026-02-01T10:00:00.000Z", totalAmount: 500, customerAddress: "Chattogram" }),
-      row({ customerPhone: "01800000000", customerName: "Rahim", totalAmount: 410 }),
+      row({ createdAt: "2026-02-01T10:00:00.000Z", totalBdt: 500, customerAddress: "Chattogram" }),
+      row({ customerMobile: "01800000000", customerName: "Rahim", totalBdt: 410 }),
     ]);
 
     const customers = await listCustomers();
     expect(customers).toHaveLength(2);
 
-    const karim = customers.find((c) => c.phone === "01700000000");
+    const karim = customers.find((c) => c.mobile === "01700000000");
     expect(karim).toBeDefined();
     expect(karim!.orderCount).toBe(2);
     expect(karim!.totalSpent).toBe(910);
@@ -45,8 +45,8 @@ describe("listCustomers", () => {
 
   it("excludes cancelled orders from total spent but counts them", async () => {
     mockedAggregates.mockResolvedValue([
-      row({ status: "delivered", totalAmount: 410 }),
-      row({ status: "cancelled", totalAmount: 410 }),
+      row({ status: "delivered", totalBdt: 410 }),
+      row({ status: "cancelled", totalBdt: 410 }),
     ]);
 
     const customers = await listCustomers();
