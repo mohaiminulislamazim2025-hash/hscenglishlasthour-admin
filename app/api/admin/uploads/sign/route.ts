@@ -3,17 +3,17 @@ import "server-only";
 import { NextResponse } from "next/server";
 import { getAdminSession } from "@/lib/auth/dal";
 import { createSignedUploadUrl } from "@/lib/supabase/storage";
-import { productExists } from "@/lib/products/repository";
-import { getSupabaseProductBucket } from "@/lib/supabase/config";
+import { bookExists } from "@/lib/books/repository";
+import { getSupabaseBookBucket } from "@/lib/supabase/config";
 import { signUploadSchema, validateUploadMeta } from "@/lib/validation/upload";
-import { buildProductImagePath, extensionFromFilename } from "@/lib/storage/paths";
+import { buildCoverPath, buildPagePath, buildPdfPath, extensionFromFilename } from "@/lib/storage/paths";
 
 export const dynamic = "force-dynamic";
 
 /**
- * Issue a short-lived signed upload URL for the product-images bucket. The
- * browser uploads directly to Storage, so the secret key and large request
- * bodies never pass through Next.js. Admin-only (deny by default).
+ * Issue a short-lived signed upload URL for the private `book-assets` bucket.
+ * The browser uploads directly to Storage, so the service-role key and large
+ * request bodies never pass through Next.js. Admin-only (deny by default).
  */
 export async function POST(request: Request) {
   const session = await getAdminSession();
@@ -41,12 +41,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: meta.message ?? "Upload rejected." }, { status: 400 });
   }
 
-  if (!(await productExists(parsed.data.productId))) {
-    return NextResponse.json({ error: "Product not found." }, { status: 404 });
+  if (!(await bookExists(parsed.data.bookId))) {
+    return NextResponse.json({ error: "Book not found." }, { status: 404 });
   }
 
-  const ext = extensionFromFilename(parsed.data.filename, "webp");
-  const path = buildProductImagePath(parsed.data.productId, ext);
+  const ext = extensionFromFilename(parsed.data.filename, parsed.data.kind === "pdf" ? "pdf" : "bin");
+  const path =
+    parsed.data.kind === "cover"
+      ? buildCoverPath(parsed.data.bookId, ext)
+      : parsed.data.kind === "pdf"
+        ? buildPdfPath(parsed.data.bookId)
+        : buildPagePath(parsed.data.bookId, parsed.data.pageNumber ?? 1, ext);
 
   const signed = await createSignedUploadUrl(path);
   if (!signed) {
@@ -56,6 +61,6 @@ export async function POST(request: Request) {
   return NextResponse.json({
     path: signed.path,
     token: signed.token,
-    bucket: getSupabaseProductBucket(),
+    bucket: getSupabaseBookBucket(),
   });
 }

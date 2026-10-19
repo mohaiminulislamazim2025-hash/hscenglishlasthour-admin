@@ -1,29 +1,30 @@
-# AGENTS.md — Nuri Shirt Store Admin Dashboard
+# AGENTS.md — HSC English Last Hour Admin Dashboard
 
 Guidance for humans and AI agents working in `bookproject-admin`. Read
-`NURI_PROJECT_MEMORY.md` first for the durable project context, then the docs in
+`PROJECT_MEMORY.md` first for the durable project context, then the docs in
 `docs/`.
 
 ## What this is
 
-A standalone Next.js admin dashboard for the **Nuri Shirt Store** website. It
-shares the **same Supabase project** as the public storefront (repo
-`../bookproject`). It manages the product catalog, product images, orders and
-store settings. It does **not** replace or restructure the website.
+A standalone Next.js admin dashboard for the **HSC English Last Hour** website.
+It shares the **same Supabase project** as the public website (repo
+`../bookproject`). It manages the book catalog, uploaded assets (cover, PDF,
+page images) and orders. It does **not** replace or restructure the website.
 
 ## Non-negotiable rules
 
 - **Do not create** a new Supabase project or storage bucket. Reuse
-  `nuri-product-images`.
-- **Never make** the product-images bucket public.
+  `book-assets`.
+- **Never make** the `book-assets` bucket public, and **never expose** the full
+  book PDF publicly.
 - **Never** put secrets in git, logs, docs, or agent memory. Real values live
   only in `.env.local` (gitignored).
 - **No fake/seed data.** All figures are read from the real database.
 - **Do not reset or drop** the database, and do not run destructive remote
   operations without explicit owner approval.
-- **Pause and ask** before: granting/revoking admin access, deleting production
-  assets, changing remote bucket policies, or any irreversible production
-  operation.
+- **Pause and ask** before: granting/revoking admin membership, deleting
+  production assets, changing remote bucket policies, or any irreversible
+  production operation.
 - The public website is **read-only reference**. Only minimal, additive changes
   there if strictly required (and always verified).
 
@@ -39,6 +40,9 @@ npm test             # vitest run
 
 npm run supabase:migrations   # list local vs remote migrations
 npm run supabase:types        # regenerate types/database.ts from the remote DB
+
+# Grant admin access (owner action; reads .env.local, never logs the password)
+ADMIN_EMAIL=you@example.com ADMIN_PASSWORD='...' npm run admin:create
 ```
 
 Run `lint`, `typecheck`, `test`, and `build` before considering work done.
@@ -46,15 +50,15 @@ Run `lint`, `typecheck`, `test`, and `build` before considering work done.
 ## Architecture at a glance
 
 - **Auth:** Supabase Auth (`signInWithPassword`). Successful login is not
-  enough — the server also requires an admin claim (`app_metadata.role ===
-  "admin"`) or membership in the optional server-only `ADMIN_EMAILS` allow-list.
+  enough — server checks `admin_users` membership with the service-role client.
 - **Authorization:** `lib/auth/dal.ts` (`requireAdmin` for pages/routes,
   `requireAdminAction` for server actions). Deny by default.
-- **Data access:** server-only secret-key client (`lib/supabase/admin.ts`)
-  after the admin check.
+- **Data access:** server-only service-role client (`lib/supabase/admin.ts`)
+  after the admin check. Needed because column-level grants hide internal
+  storage paths from `authenticated`.
 - **Uploads:** browser → private Storage via short-lived **signed upload URLs**
   (`app/api/admin/uploads/sign`). Metadata is finalized by server actions.
-- **Storage paths** must match the storefront (`lib/storage/paths.ts` ↔
+- **Storage paths** must match the website (`lib/storage/paths.ts` ↔
   `bookproject/lib/book/storage-paths.ts`).
 
 See `docs/ARCHITECTURE.md` and `docs/SECURITY.md` for detail.
@@ -66,10 +70,9 @@ See `docs/ARCHITECTURE.md` and `docs/SECURITY.md` for detail.
 | Proxy (Next 16 middleware) | `proxy.ts` |
 | Auth session + allow-list | `lib/auth/session.ts`, `lib/auth/dal.ts`, `lib/auth/actions.ts` |
 | Supabase clients | `lib/supabase/{config,admin,server,browser,storage}.ts` |
-| Product repo + actions | `lib/products/{repository,actions}.ts` |
+| Book repo + actions | `lib/books/{repository,actions}.ts` |
 | Order repo + actions | `lib/orders/{repository,customers,actions}.ts` |
-| Settings repo + actions | `lib/settings/{repository,actions}.ts` |
-| Validation | `lib/validation/{product,order,upload}.ts` |
+| Validation | `lib/validation/{book,order,upload}.ts` |
 | Storage paths | `lib/storage/paths.ts` |
 | UI primitives | `components/ui/*` |
 | Routes | `app/**` |

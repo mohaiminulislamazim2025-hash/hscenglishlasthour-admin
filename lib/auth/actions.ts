@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { isSupabasePublicConfigured } from "@/lib/supabase/config";
-import { hasAdminRole } from "./session";
+import { isAdminUserId } from "./session";
 
 export interface ActionState {
   error?: string;
@@ -49,10 +49,12 @@ export async function signInAction(
     return { error: "Invalid email or password." };
   }
 
-  if (!hasAdminRole(data.user)) {
+  const isAdmin = await isAdminUserId(data.user.id);
+  if (!isAdmin) {
     await supabase.auth.signOut();
     return {
-      error: "This account is not an authorized administrator.",
+      error:
+        "This account is not an authorized administrator. Access is limited to members of the admin allow-list.",
     };
   }
 

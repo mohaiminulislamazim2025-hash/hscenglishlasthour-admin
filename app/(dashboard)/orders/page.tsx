@@ -60,7 +60,7 @@ export default async function OrdersPage({
               id="q"
               name="q"
               defaultValue={query.q}
-              placeholder="Name, mobile, address or order id"
+              placeholder="Name, phone, address, book or order id"
             />
           </Field>
           <Field label="Status" htmlFor="status">
@@ -110,7 +110,7 @@ export default async function OrdersPage({
                 <thead>
                   <tr className="border-b border-white/8 text-left text-xs text-[var(--color-ink-muted)]">
                     <th className="px-5 py-3 font-medium">Customer</th>
-                    <th className="px-3 py-3 font-medium">Items</th>
+                    <th className="px-3 py-3 font-medium">Book</th>
                     <th className="px-3 py-3 font-medium">Total</th>
                     <th className="px-3 py-3 font-medium">Status</th>
                     <th className="px-3 py-3 font-medium">Placed</th>
@@ -124,17 +124,15 @@ export default async function OrdersPage({
                         <Link href={`/orders/${order.id}`} className="block">
                           <span className="font-medium text-[var(--color-ink)]">{order.customerName}</span>
                           <span className="block text-xs text-[var(--color-ink-muted)]">
-                            {order.customerMobile}
+                            {order.customerPhone}
                           </span>
                         </Link>
                       </td>
                       <td className="px-3 py-3 text-[var(--color-ink-soft)]">
-                        <span className="line-clamp-1">
-                          {order.itemCount} item{order.itemCount === 1 ? "" : "s"}
-                        </span>
+                        <span className="line-clamp-1">{order.bookTitle}</span>
                       </td>
                       <td className="px-3 py-3 tabular-nums font-medium text-[var(--color-ink)]">
-                        {formatMoney(order.totalBdt, order.currency)}
+                        {formatMoney(order.totalAmount, order.currency)}
                       </td>
                       <td className="px-3 py-3">
                         <Badge tone={order.status}>{titleCase(order.status)}</Badge>

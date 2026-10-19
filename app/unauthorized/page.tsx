@@ -15,9 +15,8 @@ export default function UnauthorizedPage() {
         </span>
         <h1 className="text-base font-semibold text-[var(--color-ink)]">You are not an administrator</h1>
         <p className="mt-2 text-sm text-[var(--color-ink-muted)]">
-          Your account is signed in but does not have administrator access. Ask the project owner
-          to grant it (set <code>app_metadata.role = &quot;admin&quot;</code> or add your email to the{" "}
-          <code>ADMIN_EMAILS</code> allow-list), then sign in again.
+          Your account is signed in but is not a member of the <code>admin_users</code> allow-list.
+          Ask the project owner to grant access, then sign in again.
         </p>
         <div className="mt-6 flex justify-center gap-2">
           <form action={signOutAction}>

@@ -1,33 +1,47 @@
 # Testing
 
-Tests cover pure logic and run with Vitest (`npm test`). No network access is
-required.
-
-## Suites
-
-| File | Covers |
-| --- | --- |
-| `tests/product-validation.test.ts` | product create/update schema |
-| `tests/upload-validation.test.ts` | image-only upload schema + metadata limits |
-| `tests/storage-paths.test.ts` | `products/{id}/image.{ext}` conventions |
-| `tests/order-query.test.ts` | order list query parsing |
-| `tests/order-status.test.ts` | forward-only status machine + revenue rule |
-| `tests/customers.test.ts` | customer aggregation by mobile |
-| `tests/format.test.ts` | money/date/id formatting |
-| `tests/theme.test.ts` | theme resolution + persistence |
-
 ## Commands
 
 ```bash
-npm test             # vitest run
-npm run typecheck    # tsc --noEmit
-npm run lint         # eslint
-npm run build        # production build
+npm test         # run all tests once (vitest)
+npm run test:watch
+npm run typecheck
+npm run lint
+npm run build
 ```
 
-Run all four before considering work done.
+Run all of the above before considering work done.
 
-## What is not covered by unit tests
+## What is tested
 
-- Live database reads/writes and Storage uploads (require the server secret key
-  and a production write). These must be verified manually with owner approval.
+Tests cover **pure logic** with no network access. Files live in `tests/` and
+match `**/*.test.{ts,tsx}`.
+
+| File | Covers |
+| --- | --- |
+| `tests/storage-paths.test.ts` | Path conventions and extension parsing. |
+| `tests/upload-validation.test.ts` | Upload policy + signing schema. |
+| `tests/order-status.test.ts` | Status recognition and transition rules. |
+| `tests/book-validation.test.ts` | Book create/update schemas and coercion (incl. omitted checkboxes). |
+| `tests/order-query.test.ts` | Order list query parsing/defaults. |
+| `tests/format.test.ts` | Money, bytes, dates, id formatting. |
+| `tests/customers.test.ts` | Customer aggregation (repository mocked). |
+| `tests/theme.test.ts` | Theme preference parsing + resolution. |
+
+## Test setup
+
+- `vitest.config.ts` uses the jsdom environment and aliases:
+  - `@` → project root.
+  - `server-only` → `tests/server-only-stub.ts` so server modules can be
+    imported in tests.
+- `vitest.setup.ts` loads `@testing-library/jest-dom`.
+
+## Not covered (by design)
+
+- Live Supabase calls (no network in tests). Data logic that talks to Supabase
+  is exercised manually against the real project.
+- End-to-end browser flows.
+
+When adding functionality, prefer extracting pure functions (validation,
+formatting, aggregation, transitions) so they can be unit-tested without
+Supabase.

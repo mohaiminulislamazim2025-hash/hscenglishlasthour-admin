@@ -1,27 +1,28 @@
 import { describe, expect, it } from "vitest";
 import {
-  buildProductImagePath,
+  buildCoverPath,
+  buildPagePath,
+  buildPdfPath,
+  buildPreviewPdfPath,
   extensionFromFilename,
-  isProductImagePath,
   normalizeExt,
-  productFolder,
 } from "@/lib/storage/paths";
 
-const UUID = "3f2504e0-4f89-41d3-9a0c-0305e82c3301";
-
 describe("storage path conventions", () => {
-  it("builds product image paths matching the storefront convention", () => {
-    expect(buildProductImagePath(UUID)).toBe(`products/${UUID}/image.webp`);
-    expect(buildProductImagePath(UUID, "png")).toBe(`products/${UUID}/image.png`);
+  it("builds cover paths matching the website convention", () => {
+    expect(buildCoverPath("hscenglishlasthour")).toBe("books/hscenglishlasthour/cover.webp");
+    expect(buildCoverPath("book-1", "png")).toBe("books/book-1/cover.png");
   });
 
-  it("builds the product folder path", () => {
-    expect(productFolder(UUID)).toBe(`products/${UUID}`);
+  it("builds pdf and preview paths", () => {
+    expect(buildPdfPath("b1")).toBe("books/b1/book.pdf");
+    expect(buildPreviewPdfPath("b1")).toBe("books/b1/preview.pdf");
   });
 
-  it("recognizes the canonical product image path", () => {
-    expect(isProductImagePath(UUID, `products/${UUID}/image.webp`)).toBe(true);
-    expect(isProductImagePath(UUID, `products/other/image.webp`)).toBe(false);
+  it("zero-pads page numbers to three digits", () => {
+    expect(buildPagePath("b1", 1)).toBe("books/b1/pages/001.webp");
+    expect(buildPagePath("b1", 42, "jpg")).toBe("books/b1/pages/042.jpg");
+    expect(buildPagePath("b1", 1234)).toBe("books/b1/pages/1234.webp");
   });
 
   it("normalizes extensions", () => {
@@ -30,7 +31,7 @@ describe("storage path conventions", () => {
   });
 
   it("derives a safe extension from filenames", () => {
-    expect(extensionFromFilename("Shirt.PNG")).toBe("png");
+    expect(extensionFromFilename("My Book.PDF")).toBe("pdf");
     expect(extensionFromFilename("photo.webp?token=abc")).toBe("webp");
     expect(extensionFromFilename("no-extension")).toBe("bin");
     expect(extensionFromFilename("weird.ext.toolongext")).toBe("bin");

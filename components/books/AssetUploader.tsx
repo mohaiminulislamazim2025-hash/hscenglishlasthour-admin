@@ -5,22 +5,38 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Spinner } from "@/components/ui/feedback";
 import { IconUpload } from "@/components/ui/icons";
-import { requestSignedUpload, uploadFileToStorage } from "@/lib/upload/client";
-import { MAX_IMAGE_BYTES } from "@/lib/validation/upload";
-import { finalizeProductImageUploadAction } from "@/lib/products/actions";
+import {
+  fileExtension,
+  requestSignedUpload,
+  uploadFileToStorage,
+} from "@/lib/upload/client";
+import type { UploadKind } from "@/lib/validation/upload";
+import {
+  finalizeCoverUploadAction,
+  finalizePageUploadAction,
+  finalizePdfUploadAction,
+} from "@/lib/books/actions";
 import type { ActionResult } from "@/lib/actions/types";
 
 type Phase = "idle" | "signing" | "uploading" | "finalizing" | "done" | "error";
 
-export function ProductImageUploader({
-  productId,
+export function AssetUploader({
+  bookId,
+  kind,
+  pageNumber,
+  pageId,
   accept,
+  maxBytes,
   label,
   successMessage,
   variant = "subtle",
 }: {
-  productId: string;
+  bookId: string;
+  kind: UploadKind;
+  pageNumber?: number;
+  pageId?: string;
   accept: string;
+  maxBytes: number;
   label: string;
   successMessage?: string;
   variant?: "primary" | "secondary" | "subtle" | "ghost";
@@ -35,26 +51,48 @@ export function ProductImageUploader({
 
   async function handleFile(file: File) {
     setMessage(null);
-    if (file.size > MAX_IMAGE_BYTES) {
+
+    const ext = fileExtension(file.name);
+    if (kind === "pdf" && ext !== "pdf") {
       setPhase("error");
-      setMessage(`File is too large. Maximum ${Math.round(MAX_IMAGE_BYTES / (1024 * 1024))} MB.`);
+      setMessage("Please choose a PDF file.");
+      return;
+    }
+    if (file.size > maxBytes) {
+      setPhase("error");
+      setMessage(`File is too large. Maximum ${Math.round(maxBytes / (1024 * 1024))} MB.`);
       return;
     }
 
     try {
       setPhase("signing");
       const sign = await requestSignedUpload({
-        productId,
+        bookId,
+        kind,
         filename: file.name,
         contentType: file.type || "application/octet-stream",
         size: file.size,
+        ...(pageNumber ? { pageNumber } : {}),
       });
 
       setPhase("uploading");
       await uploadFileToStorage(sign, file);
 
       setPhase("finalizing");
-      const result: ActionResult = await finalizeProductImageUploadAction({ productId, path: sign.path });
+      let result: ActionResult;
+      if (kind === "cover") {
+        result = await finalizeCoverUploadAction({ bookId, path: sign.path });
+      } else if (kind === "pdf") {
+        result = await finalizePdfUploadAction({ bookId, path: sign.path });
+      } else {
+        result = await finalizePageUploadAction({
+          bookId,
+          pageNumber: pageNumber ?? 1,
+          path: sign.path,
+          ...(pageId ? { pageId } : {}),
+        });
+      }
+
       if (!result.ok) throw new Error(result.message ?? "Could not save the upload.");
 
       setPhase("done");
@@ -80,12 +118,21 @@ export function ProductImageUploader({
           if (file) void handleFile(file);
         }}
       />
-      <Button type="button" variant={variant} size="sm" disabled={busy} onClick={() => inputRef.current?.click()}>
+      <Button
+        type="button"
+        variant={variant}
+        size="sm"
+        disabled={busy}
+        onClick={() => inputRef.current?.click()}
+      >
         {busy ? <Spinner className="h-3.5 w-3.5" /> : <IconUpload width={15} height={15} />}
         {busy ? phaseLabel(phase) : label}
       </Button>
       {message ? (
-        <p className={`text-xs ${phase === "error" ? "text-[var(--color-danger)]" : "text-[var(--color-positive)]"}`} role="status">
+        <p
+          className={`text-xs ${phase === "error" ? "text-[var(--color-danger)]" : "text-[var(--color-positive)]"}`}
+          role="status"
+        >
           {message}
         </p>
       ) : null}

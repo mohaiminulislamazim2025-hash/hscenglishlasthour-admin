@@ -3,52 +3,13 @@ import "server-only";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import {
   ORDER_STATUSES,
-  type OrderDetail,
-  type OrderItem,
   type OrderListItem,
+  type OrderRow,
   type OrderStatus,
 } from "@/types/admin";
 import type { OrderQuery } from "@/lib/validation/order";
 
 export const ORDERS_TABLE = "orders";
-export const ORDER_ITEMS_TABLE = "order_items";
-
-type Numericish = number | string | null | undefined;
-
-/** Loose shape of an `orders` row, including legacy column aliases we read defensively. */
-interface OrderDbRow {
-  id: string;
-  customer_name: string;
-  customer_mobile?: string | null;
-  customer_phone?: string | null;
-  customer_address: string;
-  payment_method: string;
-  status: string;
-  subtotal_bdt?: Numericish;
-  subtotal?: Numericish;
-  book_price?: Numericish;
-  delivery_charge_bdt?: Numericish;
-  delivery_charge?: Numericish;
-  total_bdt?: Numericish;
-  total_amount?: Numericish;
-  currency?: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
-/** Loose shape of an `order_items` row. */
-interface OrderItemDbRow {
-  id: string;
-  order_id: string;
-  product_id?: string | null;
-  product_name: string;
-  quantity?: Numericish;
-  unit_price_bdt?: Numericish;
-  unit_price?: Numericish;
-  line_total_bdt?: Numericish;
-  line_total?: Numericish;
-  created_at: string;
-}
 
 function asNumber(value: unknown, fallback = 0): number {
   if (typeof value === "number" && Number.isFinite(value)) return value;
@@ -59,37 +20,26 @@ function asNumber(value: unknown, fallback = 0): number {
   return fallback;
 }
 
-export function mapOrderRow(row: OrderDbRow): OrderListItem {
+export function mapOrderRow(row: OrderRow): OrderListItem {
   return {
     id: row.id,
+    bookId: row.book_id,
+    bookTitle: row.book_title,
     customerName: row.customer_name,
-    customerMobile: row.customer_mobile ?? row.customer_phone ?? "",
+    customerPhone: row.customer_phone,
     customerAddress: row.customer_address,
+    bookPrice: asNumber(row.book_price),
+    deliveryCharge: asNumber(row.delivery_charge),
+    totalAmount: asNumber(row.total_amount),
+    currency: row.currency,
     paymentMethod: row.payment_method,
-    status: (ORDER_STATUSES as readonly string[]).includes(row.status) ? (row.status as OrderStatus) : "pending",
-    subtotalBdt: asNumber(row.subtotal_bdt ?? row.subtotal ?? row.book_price),
-    deliveryChargeBdt: asNumber(row.delivery_charge_bdt ?? row.delivery_charge),
-    totalBdt: asNumber(row.total_bdt ?? row.total_amount),
-    currency: row.currency ?? "BDT",
+    status: row.status as OrderStatus,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
-    itemCount: 0,
   };
 }
 
-function mapOrderItem(row: OrderItemDbRow): OrderItem {
-  return {
-    id: row.id,
-    orderId: row.order_id,
-    productId: row.product_id ?? null,
-    productName: row.product_name,
-    quantity: asNumber(row.quantity),
-    unitPriceBdt: asNumber(row.unit_price_bdt ?? row.unit_price),
-    lineTotalBdt: asNumber(row.line_total_bdt ?? row.line_total),
-    createdAt: row.created_at,
-  };
-}
-
+/** Strip PostgREST filter control characters from a free-text search term. */
 function sanitizeSearch(term: string): string {
   return term.replace(/[,()*]/g, " ").trim();
 }
@@ -111,8 +61,9 @@ export async function listOrders(query: OrderQuery): Promise<OrderListResult> {
     const like = `%${term}%`;
     const parts = [
       `customer_name.ilike.${like}`,
-      `customer_mobile.ilike.${like}`,
+      `customer_phone.ilike.${like}`,
       `customer_address.ilike.${like}`,
+      `book_title.ilike.${like}`,
     ];
     if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(term)) {
       parts.unshift(`id.eq.${term}`);
@@ -136,7 +87,7 @@ export async function listOrders(query: OrderQuery): Promise<OrderListResult> {
   }
   const total = count ?? data.length;
   return {
-    rows: data.map(mapOrderRow),
+    rows: (data as OrderRow[]).map(mapOrderRow),
     total,
     page: query.page,
     perPage: query.perPage,
@@ -144,26 +95,14 @@ export async function listOrders(query: OrderQuery): Promise<OrderListResult> {
   };
 }
 
-export async function getOrderItems(orderId: string): Promise<OrderItem[]> {
-  const { data, error } = await getSupabaseAdminClient()
-    .from(ORDER_ITEMS_TABLE)
-    .select("*")
-    .eq("order_id", orderId)
-    .order("created_at", { ascending: true });
-  if (error || !data) return [];
-  return data.map(mapOrderItem);
-}
-
-export async function getOrder(id: string): Promise<OrderDetail | null> {
+export async function getOrder(id: string): Promise<OrderListItem | null> {
   const { data, error } = await getSupabaseAdminClient()
     .from(ORDERS_TABLE)
     .select("*")
     .eq("id", id)
     .maybeSingle();
   if (error || !data) return null;
-  const items = await getOrderItems(id);
-  const order = mapOrderRow(data);
-  return { ...order, itemCount: items.length, items };
+  return mapOrderRow(data as OrderRow);
 }
 
 export async function updateOrderStatus(id: string, status: OrderStatus): Promise<void> {
@@ -176,34 +115,31 @@ export async function updateOrderStatus(id: string, status: OrderStatus): Promis
 
 export interface OrderAggregateRow {
   status: OrderStatus;
-  totalBdt: number;
+  totalAmount: number;
   createdAt: string;
   customerName: string;
-  customerMobile: string;
+  customerPhone: string;
   customerAddress: string;
 }
 
-interface OrderAggregateDbRow {
-  status: string;
-  total_bdt: number;
-  created_at: string;
-  customer_name: string;
-  customer_mobile: string;
-  customer_address: string;
-}
-
+/** Fetch the minimal columns needed for stats and customer aggregation. */
 export async function listOrderAggregates(): Promise<OrderAggregateRow[]> {
   const { data, error } = await getSupabaseAdminClient()
     .from(ORDERS_TABLE)
-    .select("status, total_bdt, created_at, customer_name, customer_mobile, customer_address")
+    .select("status, total_amount, created_at, customer_name, customer_phone, customer_address")
     .order("created_at", { ascending: false });
   if (error || !data) return [];
-  return data.map((row: OrderAggregateDbRow) => ({
-    status: (ORDER_STATUSES as readonly string[]).includes(row.status) ? (row.status as OrderStatus) : "pending",
-    totalBdt: asNumber(row.total_bdt),
+  return (data as Pick<
+    OrderRow,
+    "status" | "total_amount" | "created_at" | "customer_name" | "customer_phone" | "customer_address"
+  >[]).map((row) => ({
+    status: (ORDER_STATUSES as readonly string[]).includes(row.status)
+      ? (row.status as OrderStatus)
+      : "pending",
+    totalAmount: asNumber(row.total_amount),
     createdAt: row.created_at,
     customerName: row.customer_name,
-    customerMobile: row.customer_mobile ?? "",
+    customerPhone: row.customer_phone,
     customerAddress: row.customer_address,
   }));
 }
@@ -215,14 +151,18 @@ export interface OrderStats {
   currency: string;
 }
 
+/** Real counts + revenue (all non-cancelled orders), tallied from the DB. */
 export async function getOrderStats(): Promise<OrderStats> {
   const rows = await listOrderAggregates();
-  const byStatus = Object.fromEntries(ORDER_STATUSES.map((s) => [s, 0])) as Record<OrderStatus, number>;
+  const byStatus = Object.fromEntries(ORDER_STATUSES.map((s) => [s, 0])) as Record<
+    OrderStatus,
+    number
+  >;
   let revenue = 0;
   const currency = "BDT";
   for (const row of rows) {
     byStatus[row.status] += 1;
-    if (row.status !== "cancelled") revenue += row.totalBdt;
+    if (row.status !== "cancelled") revenue += row.totalAmount;
   }
   return { total: rows.length, byStatus, revenue, currency };
 }

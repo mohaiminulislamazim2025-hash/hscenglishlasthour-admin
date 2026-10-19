@@ -1,23 +1,7 @@
 import "server-only";
 
 import { getSupabaseAdminClient } from "./admin";
-import { getSupabaseProductBucket } from "./config";
-
-/**
- * Public URL for an object. Only meaningful when the bucket itself is public;
- * the admin dashboard prefers signed URLs so it works with private buckets too.
- */
-export function getPublicObjectUrl(path: string): string | null {
-  if (!path) return null;
-  try {
-    const { data } = getSupabaseAdminClient()
-      .storage.from(getSupabaseProductBucket())
-      .getPublicUrl(path);
-    return data?.publicUrl ?? null;
-  } catch {
-    return null;
-  }
-}
+import { getSupabaseBookBucket } from "./config";
 
 export interface StorageObject {
   name: string;
@@ -37,7 +21,7 @@ export async function createSignedUploadUrl(
 ): Promise<{ path: string; token: string; signedUrl: string } | null> {
   try {
     const { data, error } = await getSupabaseAdminClient()
-      .storage.from(getSupabaseProductBucket())
+      .storage.from(getSupabaseBookBucket())
       .createSignedUploadUrl(path, { upsert: true });
     if (error || !data) return null;
     return { path, token: data.token, signedUrl: data.signedUrl };
@@ -54,7 +38,7 @@ export async function createSignedUrl(
   if (!path) return null;
   try {
     const { data, error } = await getSupabaseAdminClient()
-      .storage.from(getSupabaseProductBucket())
+      .storage.from(getSupabaseBookBucket())
       .createSignedUrl(path, ttlSeconds);
     if (error || !data) return null;
     return data.signedUrl;
@@ -72,7 +56,7 @@ export async function createSignedUrls(
   if (unique.length === 0) return {};
   try {
     const { data, error } = await getSupabaseAdminClient()
-      .storage.from(getSupabaseProductBucket())
+      .storage.from(getSupabaseBookBucket())
       .createSignedUrls(unique, ttlSeconds);
     if (error || !data) return {};
     const map: Record<string, string> = {};
@@ -90,7 +74,7 @@ export async function downloadObject(path: string): Promise<Uint8Array | null> {
   if (!path) return null;
   try {
     const { data, error } = await getSupabaseAdminClient()
-      .storage.from(getSupabaseProductBucket())
+      .storage.from(getSupabaseBookBucket())
       .download(path);
     if (error || !data) return null;
     return new Uint8Array(await data.arrayBuffer());
@@ -108,7 +92,7 @@ export async function uploadObject(
 ): Promise<boolean> {
   try {
     const { error } = await getSupabaseAdminClient()
-      .storage.from(getSupabaseProductBucket())
+      .storage.from(getSupabaseBookBucket())
       .upload(path, data, { contentType, upsert });
     return !error;
   } catch {
@@ -122,7 +106,7 @@ export async function removeObjects(paths: string[]): Promise<string[]> {
   if (unique.length === 0) return [];
   try {
     const { data, error } = await getSupabaseAdminClient()
-      .storage.from(getSupabaseProductBucket())
+      .storage.from(getSupabaseBookBucket())
       .remove(unique);
     if (error || !data) return [];
     return data.map((item) => item.name);
@@ -138,7 +122,7 @@ export async function objectExists(path: string): Promise<boolean> {
   const name = path.slice(path.lastIndexOf("/") + 1);
   try {
     const { data, error } = await getSupabaseAdminClient()
-      .storage.from(getSupabaseProductBucket())
+      .storage.from(getSupabaseBookBucket())
       .list(folder, { search: name, limit: 1 });
     if (error || !data) return false;
     return data.some((item) => item.name === name);
@@ -154,7 +138,7 @@ export async function statObject(path: string): Promise<StorageObject | null> {
   const name = path.slice(path.lastIndexOf("/") + 1);
   try {
     const { data, error } = await getSupabaseAdminClient()
-      .storage.from(getSupabaseProductBucket())
+      .storage.from(getSupabaseBookBucket())
       .list(folder, { search: name, limit: 1 });
     if (error || !data) return null;
     const item = data.find((entry) => entry.name === name);
@@ -176,7 +160,7 @@ export async function statObject(path: string): Promise<StorageObject | null> {
 export async function listFolder(folder: string): Promise<StorageObject[]> {
   try {
     const { data, error } = await getSupabaseAdminClient()
-      .storage.from(getSupabaseProductBucket())
+      .storage.from(getSupabaseBookBucket())
       .list(folder, { limit: 1000, sortBy: { column: "name", order: "asc" } });
     if (error || !data) return [];
     return data
@@ -196,3 +180,11 @@ export async function listFolder(folder: string): Promise<StorageObject[]> {
   }
 }
 
+/**
+ * Delete the cached trimmed preview so the website re-generates it from the
+ * current full PDF after a replacement. Best effort.
+ */
+export async function invalidatePreviewCache(bookId: string): Promise<void> {
+  const { buildPreviewPdfPath } = await import("@/lib/storage/paths");
+  await removeObjects([buildPreviewPdfPath(bookId)]);
+}

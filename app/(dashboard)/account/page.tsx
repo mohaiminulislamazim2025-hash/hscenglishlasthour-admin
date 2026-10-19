@@ -1,20 +1,22 @@
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardHeader } from "@/components/ui/Card";
+import { Badge } from "@/components/ui/Badge";
 import { Alert } from "@/components/ui/feedback";
 import { IconShield, IconUser } from "@/components/ui/icons";
 import { signOutAction } from "@/lib/auth/actions";
 import { requireAdmin } from "@/lib/auth/dal";
-import { describeAdminConfig } from "@/lib/auth/session";
+import { listAdminAccounts } from "@/lib/auth/session";
+import { formatDate } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
 export default async function AccountPage() {
   const session = await requireAdmin();
-  const adminConfig = describeAdminConfig();
+  const admins = await listAdminAccounts();
 
   return (
     <div className="mx-auto max-w-3xl">
-      <PageHeader title="Admin account" description="Your session and how admin access is granted." />
+      <PageHeader title="Admin account" description="Your session and the administrator allow-list." />
 
       <div className="flex flex-col gap-5">
         <Card>
@@ -38,10 +40,41 @@ export default async function AccountPage() {
           </form>
         </Card>
 
+        <Card className="p-0">
+          <div className="p-5 pb-0">
+            <CardHeader
+              title="Administrators"
+              description={`${admins.length} account${admins.length === 1 ? "" : "s"} in the allow-list.`}
+            />
+          </div>
+          {admins.length === 0 ? (
+            <p className="px-5 pb-5 text-sm text-[var(--color-ink-muted)]">No administrators found.</p>
+          ) : (
+            <ul className="divide-y divide-white/6">
+              {admins.map((admin) => (
+                <li key={admin.userId} className="flex items-center justify-between gap-4 px-5 py-3">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-[var(--color-ink)]">
+                      {admin.email ?? "Unknown email"}
+                    </p>
+                    <p className="break-all text-xs text-[var(--color-ink-muted)]">{admin.userId}</p>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-2">
+                    {admin.userId === session.userId ? <Badge tone="published">You</Badge> : null}
+                    <span className="text-xs text-[var(--color-ink-muted)]">
+                      Added {formatDate(admin.createdAt)}
+                    </span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Card>
+
         <Card>
           <CardHeader
-            title="Administrator access"
-            description="Authorization is a trusted claim, not a database table."
+            title="Grant or revoke access"
+            description="Administrator membership is changed manually for safety."
             action={
               <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/5 text-[var(--color-brand-soft)]">
                 <IconShield width={18} height={18} />
@@ -55,15 +88,11 @@ export default async function AccountPage() {
           <ol className="list-inside list-decimal space-y-2 text-sm text-[var(--color-ink-soft)]">
             <li>Create the person&apos;s account in Supabase → Authentication → Users.</li>
             <li>
-              Set that user&apos;s <code>app_metadata.role</code> to <code>admin</code> (via the
-              dashboard or Admin API), or add their email to the server-only{" "}
-              <code>ADMIN_EMAILS</code> environment variable.
+              Copy their user id and insert a row into the <code>admin_users</code> table
+              (<code>user_id</code>).
             </li>
-            <li>They can then sign in here. Removing the role/email revokes access immediately.</li>
+            <li>They can now sign in here. Removing the row revokes access immediately.</li>
           </ol>
-          <p className="mt-4 text-xs text-[var(--color-ink-muted)]">
-            Admin email allow-list: {adminConfig.hasAllowList ? `${adminConfig.allowListCount} entr${adminConfig.allowListCount === 1 ? "y" : "ies"} configured.` : "not configured (relying on app_metadata.role)."}
-          </p>
         </Card>
       </div>
     </div>

@@ -1,17 +1,3 @@
-/**
- * Database types for the Nuri Shirt Store Supabase project
- * (`gukpfmidfhzlidrefvmv`).
- *
- * HAND-MAINTAINED: this file was written from the live PostgREST schema of the
- * new project (verified column-by-column) because the Supabase CLI available on
- * this machine is authenticated to a different account and cannot
- * `gen types` against this project. Once the CLI can reach the project, prefer:
- *
- *   npm run supabase:types
- *
- * Keep the shape compatible with `supabase gen types typescript` output.
- */
-
 export type Json =
   | string
   | number
@@ -21,6 +7,8 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "14.18"
   }
@@ -51,162 +39,205 @@ export type Database = {
   }
   public: {
     Tables: {
-      order_items: {
+      admin_users: {
         Row: {
           created_at: string
-          id: string
-          line_total_bdt: number
-          order_id: string
-          product_id: string | null
-          product_name: string
-          quantity: number
-          unit_price_bdt: number
+          user_id: string
         }
         Insert: {
           created_at?: string
-          id?: string
-          line_total_bdt: number
-          order_id: string
-          product_id?: string | null
-          product_name: string
-          quantity: number
-          unit_price_bdt: number
+          user_id: string
         }
         Update: {
           created_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      book_pages: {
+        Row: {
+          alt: string | null
+          book_id: string
+          created_at: string
+          id: string
+          is_available: boolean
+          page_number: number
+          storage_path: string
+          updated_at: string
+        }
+        Insert: {
+          alt?: string | null
+          book_id: string
+          created_at?: string
           id?: string
-          line_total_bdt?: number
-          order_id?: string
-          product_id?: string | null
-          product_name?: string
-          quantity?: number
-          unit_price_bdt?: number
+          is_available?: boolean
+          page_number: number
+          storage_path: string
+          updated_at?: string
+        }
+        Update: {
+          alt?: string | null
+          book_id?: string
+          created_at?: string
+          id?: string
+          is_available?: boolean
+          page_number?: number
+          storage_path?: string
+          updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "order_items_order_id_fkey"
-            columns: ["order_id"]
+            foreignKeyName: "book_pages_book_id_fkey"
+            columns: ["book_id"]
             isOneToOne: false
-            referencedRelation: "orders"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "order_items_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
+            referencedRelation: "books"
             referencedColumns: ["id"]
           },
         ]
       }
+      books: {
+        Row: {
+          author: string | null
+          content_mode: string
+          cover_image_path: string | null
+          created_at: string
+          currency: string
+          default_mode: string
+          delivery_charge: number
+          description: string | null
+          flip_enabled: boolean
+          id: string
+          is_published: boolean
+          market_country: string
+          max_zoom: number
+          min_zoom: number
+          offer_price: number | null
+          page_aspect_ratio: number
+          pdf_enabled: boolean
+          pdf_storage_path: string | null
+          phone_region: string
+          preview_page_count: number
+          price: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author?: string | null
+          content_mode?: string
+          cover_image_path?: string | null
+          created_at?: string
+          currency?: string
+          default_mode?: string
+          delivery_charge?: number
+          description?: string | null
+          flip_enabled?: boolean
+          id: string
+          is_published?: boolean
+          market_country?: string
+          max_zoom?: number
+          min_zoom?: number
+          offer_price?: number | null
+          page_aspect_ratio?: number
+          pdf_enabled?: boolean
+          pdf_storage_path?: string | null
+          phone_region?: string
+          preview_page_count?: number
+          price?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          author?: string | null
+          content_mode?: string
+          cover_image_path?: string | null
+          created_at?: string
+          currency?: string
+          default_mode?: string
+          delivery_charge?: number
+          description?: string | null
+          flip_enabled?: boolean
+          id?: string
+          is_published?: boolean
+          market_country?: string
+          max_zoom?: number
+          min_zoom?: number
+          offer_price?: number | null
+          page_aspect_ratio?: number
+          pdf_enabled?: boolean
+          pdf_storage_path?: string | null
+          phone_region?: string
+          preview_page_count?: number
+          price?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
+          book_id: string
+          book_price: number
+          book_title: string
           created_at: string
+          currency: string
           customer_address: string
-          customer_mobile: string
           customer_name: string
-          delivery_charge_bdt: number
+          customer_phone: string
+          delivery_charge: number
           id: string
           payment_method: string
           status: string
-          subtotal_bdt: number
-          total_bdt: number
+          total_amount: number
           updated_at: string
         }
         Insert: {
+          book_id: string
+          book_price: number
+          book_title: string
           created_at?: string
+          currency?: string
           customer_address: string
-          customer_mobile: string
           customer_name: string
-          delivery_charge_bdt?: number
+          customer_phone: string
+          delivery_charge: number
           id?: string
           payment_method?: string
           status?: string
-          subtotal_bdt: number
-          total_bdt: number
+          total_amount: number
           updated_at?: string
         }
         Update: {
+          book_id?: string
+          book_price?: number
+          book_title?: string
           created_at?: string
+          currency?: string
           customer_address?: string
-          customer_mobile?: string
           customer_name?: string
-          delivery_charge_bdt?: number
+          customer_phone?: string
+          delivery_charge?: number
           id?: string
           payment_method?: string
           status?: string
-          subtotal_bdt?: number
-          total_bdt?: number
+          total_amount?: number
           updated_at?: string
         }
-        Relationships: []
-      }
-      products: {
-        Row: {
-          created_at: string
-          description: string | null
-          id: string
-          image_path: string | null
-          is_available: boolean
-          name: string
-          price_bdt: number
-          sort_order: number
-          stock_quantity: number
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          description?: string | null
-          id?: string
-          image_path?: string | null
-          is_available?: boolean
-          name: string
-          price_bdt?: number
-          sort_order?: number
-          stock_quantity?: number
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          description?: string | null
-          id?: string
-          image_path?: string | null
-          is_available?: boolean
-          name?: string
-          price_bdt?: number
-          sort_order?: number
-          stock_quantity?: number
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      store_settings: {
-        Row: {
-          currency: string
-          delivery_charge_bdt: number
-          id: number
-          updated_at: string
-        }
-        Insert: {
-          currency?: string
-          delivery_charge_bdt?: number
-          id?: number
-          updated_at?: string
-        }
-        Update: {
-          currency?: string
-          delivery_charge_bdt?: number
-          id?: number
-          updated_at?: string
-        }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "orders_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_admin: { Args: never; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
@@ -265,6 +296,78 @@ export type Database = {
           type?: Database["storage"]["Enums"]["buckettype"]
           updated_at?: string | null
           versioning_status?: string
+        }
+        Relationships: []
+      }
+      buckets_analytics: {
+        Row: {
+          created_at: string
+          deleted_at: string | null
+          format: string
+          id: string
+          name: string
+          type: Database["storage"]["Enums"]["buckettype"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          deleted_at?: string | null
+          format?: string
+          id?: string
+          name: string
+          type?: Database["storage"]["Enums"]["buckettype"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          deleted_at?: string | null
+          format?: string
+          id?: string
+          name?: string
+          type?: Database["storage"]["Enums"]["buckettype"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      buckets_vectors: {
+        Row: {
+          created_at: string
+          id: string
+          type: Database["storage"]["Enums"]["buckettype"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          type?: Database["storage"]["Enums"]["buckettype"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          type?: Database["storage"]["Enums"]["buckettype"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      migrations: {
+        Row: {
+          executed_at: string | null
+          hash: string
+          id: number
+          name: string
+        }
+        Insert: {
+          executed_at?: string | null
+          hash: string
+          id: number
+          name: string
+        }
+        Update: {
+          executed_at?: string | null
+          hash?: string
+          id?: number
+          name?: string
         }
         Relationships: []
       }
@@ -330,12 +433,310 @@ export type Database = {
           },
         ]
       }
+      s3_multipart_uploads: {
+        Row: {
+          bucket_id: string
+          created_at: string
+          id: string
+          in_progress_size: number
+          key: string
+          metadata: Json | null
+          owner_id: string | null
+          upload_signature: string
+          user_metadata: Json | null
+          version: string
+        }
+        Insert: {
+          bucket_id: string
+          created_at?: string
+          id: string
+          in_progress_size?: number
+          key: string
+          metadata?: Json | null
+          owner_id?: string | null
+          upload_signature: string
+          user_metadata?: Json | null
+          version: string
+        }
+        Update: {
+          bucket_id?: string
+          created_at?: string
+          id?: string
+          in_progress_size?: number
+          key?: string
+          metadata?: Json | null
+          owner_id?: string | null
+          upload_signature?: string
+          user_metadata?: Json | null
+          version?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "s3_multipart_uploads_bucket_id_fkey"
+            columns: ["bucket_id"]
+            isOneToOne: false
+            referencedRelation: "buckets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      s3_multipart_uploads_parts: {
+        Row: {
+          bucket_id: string
+          created_at: string
+          etag: string
+          id: string
+          key: string
+          owner_id: string | null
+          part_number: number
+          size: number
+          upload_id: string
+          version: string
+        }
+        Insert: {
+          bucket_id: string
+          created_at?: string
+          etag: string
+          id?: string
+          key: string
+          owner_id?: string | null
+          part_number: number
+          size?: number
+          upload_id: string
+          version: string
+        }
+        Update: {
+          bucket_id?: string
+          created_at?: string
+          etag?: string
+          id?: string
+          key?: string
+          owner_id?: string | null
+          part_number?: number
+          size?: number
+          upload_id?: string
+          version?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "s3_multipart_uploads_parts_bucket_id_fkey"
+            columns: ["bucket_id"]
+            isOneToOne: false
+            referencedRelation: "buckets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "s3_multipart_uploads_parts_upload_id_fkey"
+            columns: ["upload_id"]
+            isOneToOne: false
+            referencedRelation: "s3_multipart_uploads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vector_indexes: {
+        Row: {
+          bucket_id: string
+          created_at: string
+          data_type: string
+          dimension: number
+          distance_metric: string
+          id: string
+          metadata_configuration: Json | null
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          bucket_id: string
+          created_at?: string
+          data_type: string
+          dimension: number
+          distance_metric: string
+          id?: string
+          metadata_configuration?: Json | null
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          bucket_id?: string
+          created_at?: string
+          data_type?: string
+          dimension?: number
+          distance_metric?: string
+          id?: string
+          metadata_configuration?: Json | null
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vector_indexes_bucket_id_fkey"
+            columns: ["bucket_id"]
+            isOneToOne: false
+            referencedRelation: "buckets_vectors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      allow_any_operation: {
+        Args: { expected_operations: string[] }
+        Returns: boolean
+      }
+      allow_only_operation: {
+        Args: { expected_operation: string }
+        Returns: boolean
+      }
+      can_insert_object: {
+        Args: { bucketid: string; metadata: Json; name: string; owner: string }
+        Returns: undefined
+      }
+      extension: { Args: { name: string }; Returns: string }
+      filename: { Args: { name: string }; Returns: string }
+      foldername: { Args: { name: string }; Returns: string[] }
+      get_common_prefix: {
+        Args: { p_delimiter: string; p_key: string; p_prefix: string }
+        Returns: string
+      }
+      get_size_by_bucket: {
+        Args: { delete_markers?: string; noncurrent_versions?: string }
+        Returns: {
+          bucket_id: string
+          size: number
+        }[]
+      }
+      list_multipart_uploads_with_delimiter: {
+        Args: {
+          bucket_id: string
+          delimiter_param: string
+          max_keys?: number
+          next_key_token?: string
+          next_upload_token?: string
+          prefix_param: string
+          raw_prefix_param?: string
+        }
+        Returns: {
+          created_at: string
+          id: string
+          key: string
+        }[]
+      }
+      list_objects_with_delimiter: {
+        Args: {
+          _bucket_id: string
+          delete_markers?: string
+          delimiter_param: string
+          max_keys?: number
+          next_token?: string
+          next_token_archived_at?: string
+          next_token_version?: string
+          noncurrent_versions?: string
+          prefix_param: string
+          sort_order?: string
+          start_after?: string
+        }
+        Returns: {
+          archived_at: string
+          created_at: string
+          id: string
+          is_delete_marker: boolean
+          is_versioned: boolean
+          last_accessed_at: string
+          metadata: Json
+          name: string
+          updated_at: string
+          version: string
+        }[]
+      }
+      operation: { Args: never; Returns: string }
+      search: {
+        Args: {
+          bucketname: string
+          delete_markers?: string
+          levels?: number
+          limits?: number
+          noncurrent_versions?: string
+          offsets?: number
+          prefix: string
+          search?: string
+          sortcolumn?: string
+          sortorder?: string
+        }
+        Returns: {
+          archived_at: string
+          created_at: string
+          id: string
+          is_delete_marker: boolean
+          is_versioned: boolean
+          last_accessed_at: string
+          metadata: Json
+          name: string
+          updated_at: string
+          version: string
+        }[]
+      }
+      search_by_timestamp: {
+        Args: {
+          delete_markers?: string
+          noncurrent_versions?: string
+          p_bucket_id: string
+          p_level: number
+          p_limit: number
+          p_prefix: string
+          p_sort_column: string
+          p_sort_column_after: string
+          p_sort_order: string
+          p_start_after: string
+          p_start_after_version?: string
+        }
+        Returns: {
+          archived_at: string
+          created_at: string
+          id: string
+          is_delete_marker: boolean
+          is_versioned: boolean
+          key: string
+          last_accessed_at: string
+          metadata: Json
+          name: string
+          updated_at: string
+          version: string
+        }[]
+      }
+      search_v2: {
+        Args: {
+          bucket_name: string
+          delete_markers?: string
+          levels?: number
+          limits?: number
+          noncurrent_versions?: string
+          prefix: string
+          sort_column?: string
+          sort_column_after?: string
+          sort_order?: string
+          start_after?: string
+          start_after_archived_at?: string
+          start_after_is_continuation?: boolean
+          start_after_version?: string
+        }
+        Returns: {
+          archived_at: string
+          created_at: string
+          id: string
+          is_delete_marker: boolean
+          is_versioned: boolean
+          key: string
+          last_accessed_at: string
+          metadata: Json
+          name: string
+          updated_at: string
+          version: string
+        }[]
+      }
     }
     Enums: {
       buckettype: "STANDARD" | "ANALYTICS" | "VECTOR"
@@ -383,11 +784,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -408,11 +809,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -433,11 +834,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -450,16 +851,18 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
   ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
-  : never
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
 
 export const Constants = {
   graphql_public: {

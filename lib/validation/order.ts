@@ -30,7 +30,7 @@ export const orderQuerySchema = z.object({
     .or(z.literal(""))
     .transform((value) => (value ? value : undefined)),
   sort: z
-    .enum(["created_at", "total_bdt", "status", "customer_name"])
+    .enum(["created_at", "total_amount", "status", "customer_name"])
     .optional()
     .default("created_at"),
   dir: z.enum(["asc", "desc"]).optional().default("desc"),
